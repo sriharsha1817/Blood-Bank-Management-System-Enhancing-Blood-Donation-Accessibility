@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Bank Request History</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        body {
+            background: linear-gradient(to right, #ffafbd, #ffc3a0);
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 800px;
+            text-align: center;
+        }
+        h2 {
+            color: #ff6f61;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+        .status-approved {
+            color: green;
+            font-weight: bold;
+        }
+        .status-pending {
+            color: orange;
+            font-weight: bold;
+        }
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Blood Bank Request History</h2>
+        <table id="requestTable">
+            <thead>
+                <tr>
+                    <th>Hospital</th>
+                    <th>Blood Type</th>
+                    <th>Quantity</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody id="requestBody">
+                <!-- Requests will be populated here -->
+            </tbody>
+        </table>
+        <a href="{{ url_for('bloodbank_dashboard') }}">← Back to Dashboard</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is logged in and has admin role
+            fetch('/api/users/profile')
+                .then(response => {
+                    if (!response.ok) {
+                        window.location.href = '/login';
+                        throw new Error('You must be logged in');
+                    }
+                    return response.json();
+                })
+                .then(user => {
+                    console.log("User profile:", user);  // Debug logging
+                    if (user.role !== 'admin') {
+                        window.location.href = '/';
+                        throw new Error('Unauthorized access');
+                    }
+                })
+                .catch(error => console.error('Error checking user profile:', error));
+
+            // Fetch all blood requests for the blood bank (admin)
+            fetch('/api/blood-requests')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch blood requests');
+                    }
+                    return response.json();
+                })
+                .then(requests => {
+                    console.log("Fetched requests:", requests);  // Debug logging
+                    const requestBody = document.getElementById('requestBody');
+                    
+                    if (requests.length === 0) {
+                        requestBody.innerHTML = '<tr><td colspan="5">No requests found.</td></tr>';
+                        return;
+                    }
+
+                    requests.forEach(request => {
+                        const row = document.createElement('tr');
+                        const statusClass = request.status === 'Approved' ? 'status-approved' : 'status-pending';
+                        row.innerHTML = `
+                            <td>${request.hospital_name}</td>
+                            <td>${request.blood_type}</td>
+                            <td>${request.quantity}</td>
+                            <td class="${statusClass}">${request.status}</td>
+                            <td>${new Date(request.created_at).toLocaleDateString()}</td>
+                        `;
+                        requestBody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching blood requests:', error);
+                    const requestBody = document.getElementById('requestBody');
+                    requestBody.innerHTML = '<tr><td colspan="5">Error loading requests.</td></tr>';
+                });
+        });
+    </script>
+</body>
+</html>

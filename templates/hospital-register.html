@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Registration - Blood Bank Management System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa, #d32f2f);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: #d32f2f;
+            padding: 15px 0;
+            z-index: 1000;
+            transition: background 0.3s ease;
+        }
+        .header.scrolled {
+            background: #d32f2f;
+        }
+        .nav {
+            text-align: center;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            margin: 0 5px;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        .nav a:hover {
+            color: #ffcccc;
+        }
+        .register-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            animation: slideIn 0.8s ease-in-out;
+        }
+        .register-container h2 {
+            color: #d32f2f;
+            font-size: 2em;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+        .form-group {
+            margin: 15px 0;
+            position: relative;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        input:focus, select:focus {
+            border-color: #d32f2f;
+            box-shadow: 0 0 5px rgba(211, 47, 47, 0.3);
+            outline: none;
+        }
+        .validation {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            display: none;
+        }
+        .error { color: #ff4444; }
+        .success { color: #00cc00; }
+        button {
+            background: #d32f2f;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.3s ease, background 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+        button:hover {
+            transform: scale(1.05);
+            background: #b71c1c;
+        }
+        .links {
+            margin-top: 15px;
+        }
+        .links a {
+            color: #d32f2f;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+        .security-indicator {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+        .secure { color: #00cc00; }
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @media (max-width: 768px) {
+            .register-container { max-width: 350px; padding: 30px; }
+            .register-container h2 { font-size: 1.8em; }
+            .nav a { padding: 8px 15px; font-size: 14px; }
+            button { font-size: 14px; padding: 10px 20px; }
+        }
+    </style>
+    <script>
+        // Real-time validation and registration logic
+        function validateInput(input) {
+            const validation = input.nextElementSibling;
+            if (input.value.length < 3) {
+                validation.textContent = 'Must be at least 3 characters';
+                validation.className = 'validation error';
+                validation.style.display = 'block';
+                return false;
+            } else {
+                validation.textContent = 'Valid input';
+                validation.className = 'validation success';
+                validation.style.display = 'block';
+                return true;
+            }
+        }
+
+        function handleRegister(event) {
+            event.preventDefault();
+            const username = document.getElementById('username');
+            const password = document.getElementById('password');
+            const hospitalName = document.getElementById('hospitalName');
+            const email = document.getElementById('email');
+            const address = document.getElementById('address');
+            const securityIndicator = document.querySelector('.security-indicator');
+
+            if (!validateInput(username) || !validateInput(password) || !validateInput(hospitalName) || 
+                !validateInput(email) || !validateInput(address)) {
+                alert('Please correct the input errors.');
+                return;
+            }
+
+            // Use the correct endpoint from backend
+            fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    username: username.value, 
+                    password: password.value, 
+                    role: 'hospital', 
+                    hospitalName: hospitalName.value, 
+                    email: email.value, 
+                    address: address.value 
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    securityIndicator.textContent = 'Registration successful';
+                    securityIndicator.className = 'security-indicator secure';
+                    alert('Registration successful! Redirecting to login...');
+                    window.location.href = '/hospital';
+                } else {
+                    securityIndicator.textContent = 'Registration failed: ' + data.message;
+                    securityIndicator.className = 'security-indicator error';
+                    alert('Registration failed: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Registration error:', error);
+                securityIndicator.textContent = 'Connection error. Try again.';
+                securityIndicator.className = 'security-indicator error';
+                alert('An error occurred. Please try again.');
+            });
+        }
+
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
+        // Add real-time validation on input
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('username').addEventListener('input', () => validateInput(document.getElementById('username')));
+            document.getElementById('password').addEventListener('input', () => validateInput(document.getElementById('password')));
+            document.getElementById('hospitalName').addEventListener('input', () => validateInput(document.getElementById('hospitalName')));
+            document.getElementById('email').addEventListener('input', () => validateInput(document.getElementById('email')));
+            document.getElementById('address').addEventListener('input', () => validateInput(document.getElementById('address')));
+        });
+    </script>
+</head>
+<body>
+    <header class="header">
+        <h1>Blood Bank</h1>
+        <nav class="nav">
+            <a href="{{url_for('index')}}">Home</a>
+            <a href="{{url_for('donor_login')}}">Donor Login</a>
+            <a href="{{url_for('hospital_login')}}">Hospital Login</a>
+            <a href="{{url_for('bloodbank_login')}}">Admin Login</a>
+        </nav>
+    </header>
+    <div class="register-container">
+        <h2>Hospital Registration</h2>
+        <form onsubmit="handleRegister(event)">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" placeholder="Username" required>
+                <div class="validation"></div>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" placeholder="Password" required>
+                <div class="validation"></div>
+            </div>
+            <div class="form-group">
+                <label for="hospitalName">Hospital Name:</label>
+                <input type="text" id="hospitalName" name="hospitalName" placeholder="Hospital Name" required>
+                <div class="validation"></div>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" placeholder="Email" required>
+                <div class="validation"></div>
+            </div>
+            <div class="form-group">
+                <label for="address">Address:</label>
+                <input type="text" id="address" name="address" placeholder="Address" required>
+                <div class="validation"></div>
+            </div>
+            <button type="submit">Register</button>
+        </form>
+        <div class="links">
+            <a href="{{url_for('hospital_login')}}">Already have an account? Login here</a>
+        </div>
+        <div class="security-indicator">Secure registration system</div>
+    </div>
+</body>
+</html>

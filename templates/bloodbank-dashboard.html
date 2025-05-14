@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Blood Bank Management System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa, #d32f2f);
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: #d32f2f;
+            padding: 15px 0;
+            z-index: 1000;
+            transition: background 0.3s ease;
+        }
+        .header.scrolled {
+            background: #d32f2f;
+        }
+        .nav {
+            text-align: center;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            margin: 0 5px;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        .nav a:hover {
+            color: #ffcccc;
+        }
+        .dashboard-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            margin-top: 80px; /* Space for fixed header */
+            margin-bottom: 20px;
+            animation: slideIn 1.5s ease-in-out;
+        }
+        .dashboard-container h1 {
+            color: #d32f2f;
+            font-size: 2em;
+            margin-bottom: 30px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        .menu-section {
+            list-style: none;
+        }
+        .menu-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #ddd;
+            transition: background 0.3s ease, transform 0.3s ease;
+            cursor: pointer;
+        }
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+        .menu-item:hover {
+            background: #f5f5f5;
+            transform: translateX(5px);
+        }
+        .menu-item a {
+            color: #333;
+            text-decoration: none;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        .menu-item:hover a {
+            color: #d32f2f;
+        }
+        .stats-section {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .stat {
+            color: #666;
+            font-size: 0.9em;
+            margin: 10px 0;
+        }
+        button.logout {
+            background: #d32f2f;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.3s ease, background 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+        button.logout:hover {
+            transform: scale(1.05);
+            background: #b71c1c;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @media (max-width: 768px) {
+            .dashboard-container { max-width: 350px; padding: 30px; margin: 80px 10px 20px; }
+            .dashboard-container h1 { font-size: 1.8em; }
+            .nav a { padding: 8px 15px; font-size: 14px; }
+            .menu-item { padding: 12px 15px; }
+            button.logout { font-size: 14px; padding: 10px 20px; }
+        }
+    </style>
+    <script>
+        function updateStats() {
+            fetch('/api/admin/stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('active-users').textContent = `Total Users: ${data.totalUsers}`;
+                        document.getElementById('donations-today').textContent = `Registered Donors: ${data.donorCount}`;
+                        document.getElementById('stock-units').textContent = `Registered Hospitals: ${data.hospitalCount}`;
+                    } else {
+                        console.error('Failed to fetch admin stats:', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching admin stats:', error);
+                });
+        }
+
+        // Logout function
+        function handleLogout() {
+            fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/login';
+                } else {
+                    alert('Logout failed: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+                alert('An error occurred. Please try again.');
+            });
+        }
+
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
+        // Initialize stats on page load
+        window.onload = () => {
+            updateStats();
+            // Update stats every 5 minutes
+            setInterval(updateStats, 300000);
+        };
+    </script>
+</head>
+<body>
+    <header class="header">
+        <h1>Blood Bank</h1>
+    </header>
+    <div class="dashboard-container">
+        <h1>Dashboard</h1>
+        <div class="stats-section">
+            <p id="active-users" class="stat">Loading...</p>
+            <p id="donations-today" class="stat">Loading...</p>
+            <p id="stock-units" class="stat">Loading...</p>
+        </div>
+        <ul class="menu-section">
+            <ul class="menu-section">
+                <li class="menu-item"><a href="/manage-donors">Manage Donors</a></li>
+                <li class="menu-item"><a href="/manage-hospitals">Manage Hospitals</a></li>
+                <li class="menu-item"><a href="/blood-stock">Blood Stock</a></li>
+                <li class="menu-item"><a href="/Hblood-pending">Pending Request</a></li>
+                <li class="menu-item"><a href="{{ url_for('bloodbank_request_history') }}">View Request History</a></li>
+                <li class="menu-item"><a href="/admin-notifications">Notifications</a></li>
+            </ul>
+        </ul>
+        <button class="logout" onclick="handleLogout()">Logout</button>
+    </div>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'92589f0f4c483dfd',t:'MTc0Mjg0NTAyOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

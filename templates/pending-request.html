@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pending Requests - Blood Bank Management System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa, #d32f2f);
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: #d32f2f;
+            padding: 15px 0;
+            z-index: 1000;
+            transition: background 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header.scrolled {
+            background: #d32f2f;
+        }
+        .nav {
+            text-align: center;
+            flex-grow: 1;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            margin: 0 5px;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        .nav a:hover {
+            color: #ffcccc;
+        }
+        button.logout {
+            background: #d32f2f;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: transform 0.3s ease, background 0.3s ease;
+            margin-right: 20px;
+            width: auto;
+            min-width: 80px;
+        }
+        button.logout:hover {
+            transform: scale(1.05);
+            background: #b71c1c;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            max-width: 1200px;
+            width: 100%;
+            margin-top: 80px; /* Space for fixed header */
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+        .pending-requests {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: slideIn 1.5s ease-in-out;
+        }
+        .pending-requests h2 {
+            color: #d32f2f;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #f5f5f5;
+            font-weight: bold;
+            color: #333;
+        }
+        td {
+            color: #666;
+        }
+        tr:hover {
+            background: #f9f9f9;
+        }
+        .actions button {
+            background: #d32f2f;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: transform 0.3s ease, background 0.3s ease;
+            margin-right: 5px;
+        }
+        .actions button:hover {
+            transform: scale(1.05);
+            background: #b71c1c;
+        }
+        .new-request-btn {
+            background: #d32f2f;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.3s ease, background 0.3s ease;
+            width: 100%;
+            max-width: 250px;
+            margin: 20px auto 0;
+            display: block;
+            text-align: center;
+            text-decoration: none;
+        }
+        .new-request-btn:hover {
+            transform: scale(1.05);
+            background: #b71c1c;
+        }
+        .filter-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .filter-group label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .filter-group select {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            width: auto;
+        }
+        .refresh-btn {
+            background: #4CAF50;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.3s ease;
+        }
+        .refresh-btn:hover {
+            transform: scale(1.05);
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            .pending-requests { padding: 20px; }
+            .pending-requests h2 { font-size: 1.3em; }
+            .nav a { padding: 8px 15px; font-size: 14px; }
+            button.logout { font-size: 12px; padding: 6px 12px; margin-right: 10px; min-width: 70px; }
+            th, td { padding: 10px; font-size: 14px; }
+            .actions button { padding: 6px 12px; font-size: 12px; }
+            .new-request-btn { font-size: 14px; padding: 10px 20px; max-width: 180px; }
+            .filter-controls { flex-direction: column; align-items: flex-start; }
+            .filter-group { margin-bottom: 10px; }
+        }
+    </style>
+    <script>
+        let pendingRequests = [];
+
+        // Load actual requests from the server
+        function loadPendingRequests() {
+            fetch('/api/blood-requests', {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                pendingRequests = data;
+                updateRequestsTable();
+            })
+            .catch(error => {
+                console.error('Error loading requests:', error);
+                // Fall back to sample data if API fails
+                pendingRequests = [
+                    { id: "001", blood_type: "A+", quantity: "5 units", hospital_name: "Central Hospital", status: "Pending" },
+                    { id: "002", blood_type: "O-", quantity: "3 units", hospital_name: "City General", status: "Approved" },
+                    { id: "003", blood_type: "B+", quantity: "2 units", hospital_name: "Memorial Hospital", status: "Pending" }
+                ];
+                updateRequestsTable();
+            });
+        }
+
+        function updateRequestsTable() {
+            const tableBody = document.querySelector('tbody');
+            tableBody.innerHTML = ''; // Clear existing rows
+            
+            // Get filter values
+            const statusFilter = document.getElementById('statusFilter').value;
+            const bloodTypeFilter = document.getElementById('bloodTypeFilter').value;
+            
+            // Filter requests based on selected filters
+            const filteredRequests = pendingRequests.filter(request => {
+                return (statusFilter === 'All' || request.status === statusFilter) && 
+                       (bloodTypeFilter === 'All' || request.blood_type === bloodTypeFilter);
+            });
+
+            if (filteredRequests.length === 0) {
+                const emptyRow = document.createElement('tr');
+                emptyRow.innerHTML = `<td colspan="6" style="text-align: center;">No requests found matching the selected filters.</td>`;
+                tableBody.appendChild(emptyRow);
+                return;
+            }
+
+            filteredRequests.forEach(request => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${request.id}</td>
+                    <td>${request.blood_type}</td>
+                    <td>${request.quantity}</td>
+                    <td>${request.hospital_name}</td>
+                    <td>${request.status}</td>
+                    <td class="actions">
+                        ${request.status === 'Pending' ? `<button onclick="approveRequest('${request.id}')">Approve</button>` : ''}
+                        ${request.status === 'Pending' ? `<button onclick="cancelRequest('${request.id}')">Cancel</button>` : ''}
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function approveRequest(requestId) {
+            if (confirm(`Are you sure you want to approve request ${requestId}?`)) {
+                fetch(`/api/blood-requests/${requestId}`, {
+                    method: 'PATCH',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'Approved' })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`Request ${requestId} has been approved.`);
+                        loadPendingRequests();
+                    } else {
+                        alert('Failed to approve request: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error approving request:', error);
+                    alert('An error occurred. Please try again.');
+                });
+            }
+        }
+
+        function cancelRequest(requestId) {
+            if (confirm(`Are you sure you want to cancel request ${requestId}?`)) {
+                fetch(`/api/blood-requests/${requestId}`, {
+                    method: 'PATCH',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: "Cancelled" })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`Request ${requestId} has been canceled.`);
+                        loadPendingRequests();
+                    } else {
+                        alert('Failed to cancel request: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error canceling request:', error);
+                    alert('An error occurred. Please try again.');
+                });
+            }
+        }
+
+        // Apply filters when filter values change
+        function applyFilters() {
+            updateRequestsTable();
+        }
+
+        // Logout function
+        function handleLogout() {
+            fetch('/api/auth/logout', {
+                method: 'POST',
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/login';
+                } else {
+                    alert('Logout failed: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+                alert('An error occurred during logout. Please try again.');
+            });
+        }
+
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
+        // Load pending requests on page load
+        window.onload = loadPendingRequests;
+    </script>
+</head>
+<body>
+    <header class="header">
+        <div class="nav">
+        
+        </div>
+        <button class="logout" onclick="handleLogout()">Logout</button>
+    </header>
+    
+    <div class="container">
+        <div class="pending-requests">
+            <h2>Pending Requests</h2>
+            
+            <div class="filter-controls">
+                <div>
+                    <div class="filter-group">
+                        <label for="statusFilter">Status:</label>
+                        <select id="statusFilter" onchange="applyFilters()">
+                            <option value="All">All</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="bloodTypeFilter">Blood Type:</label>
+                        <select id="bloodTypeFilter" onchange="applyFilters()">
+                            <option value="All">All</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Request ID</th>
+                        <th>Blood Type</th>
+                        <th>Quantity</th>
+                        <th>Hospital</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Request data will be loaded here -->
+                </tbody>
+            </table>
+            
+            
+        </div>
+    </div>
+</body>
+</html>

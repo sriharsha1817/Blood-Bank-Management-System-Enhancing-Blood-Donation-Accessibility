@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Appointment - Blood Bank Management System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa, #d32f2f);
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: #d32f2f;
+            padding: 15px 0;
+            z-index: 1000;
+            transition: background 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header.scrolled {
+            background: #d32f2f;
+        }
+        .nav {
+            text-align: center;
+            flex-grow: 1;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            margin: 0 5px;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        .nav a:hover {
+            color: #ffcccc;
+        }
+        button.logout {
+            background: #d32f2f;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: transform 0.3s ease, background 0.3s ease;
+            margin-right: 20px;
+            width: auto;
+            min-width: 80px;
+        }
+        button.logout:hover {
+            transform: scale(1.05);
+            background: #b71c1c;
+        }
+        .appointment-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 500px;
+            margin-top: 80px; /* Space for fixed header */
+            margin-bottom: 20px;
+            animation: slideIn 1.5s ease-in-out;
+        }
+        .appointment-container h1 {
+            color: #d32f2f;
+            font-size: 2em;
+            margin-bottom: 30px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+        input[type="date"], select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        input[type="date"]:focus, select:focus {
+            border-color: #d32f2f;
+            box-shadow: 0 0 5px rgba(211, 47, 47, 0.3);
+            outline: none;
+        }
+        button.book-slot {
+            background: #d32f2f;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.3s ease, background 0.3s ease;
+            width: 100%;
+            max-width: 200px;
+            margin: 0 auto;
+            display: block;
+        }
+        button.book-slot:hover {
+            transform: scale(1.05);
+            background: #b71c1c;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @media (max-width: 768px) {
+            .appointment-container { max-width: 350px; padding: 20px; margin: 80px 10px 20px; }
+            .appointment-container h1 { font-size: 1.8em; }
+            .nav a { padding: 8px 15px; font-size: 14px; }
+            button.logout { font-size: 12px; padding: 6px 12px; margin-right: 10px; min-width: 70px; }
+            button.book-slot { font-size: 14px; padding: 10px 20px; max-width: 180px; }
+        }
+    </style>
+    <script>
+        // Load hospitals when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        loadHospitals();
+    });
+
+    // Function to load hospitals into the dropdown
+    function loadHospitals() {
+        fetch('/api/available-hospitals')
+            .then(response => response.json())
+            .then(hospitals => {
+                const hospitalSelect = document.getElementById('hospitalId');
+                // Clear existing options except the first one
+                hospitalSelect.innerHTML = '<option value="">-- Select Hospital --</option>';
+                
+                // Add hospitals from the database
+                hospitals.forEach(hospital => {
+                    const option = document.createElement('option');
+                    option.value = hospital.id;
+                    option.textContent = hospital.hospital_name;
+                    hospitalSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading hospitals:', error);
+                alert('Failed to load hospitals. Please refresh the page.');
+            });
+    }
+
+    // Book appointment function
+    function bookAppointment(event) {
+        event.preventDefault(); // Prevent default form submission
+        
+        const date = document.getElementById('appointmentDate').value;
+        const hospitalId = document.getElementById('hospitalId').value;
+
+        if (!date || !hospitalId) {
+            alert('Please fill in all fields.');
+            return;
+        }
+
+        // Make sure we're sending data in the format the backend expects
+        fetch('/api/book-appointment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ 
+        date: date,
+        hospital_id: parseInt(hospitalId) // This should match the backend parameter name
+    })
+})
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Appointment booked successfully!');
+                document.getElementById('appointmentDate').value = '';
+                document.getElementById('hospitalId').value = '';
+            } else {
+                alert('Failed to book appointment: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Booking error:', error);
+            alert('An error occurred. Please try again.');
+        });
+    }
+
+        // Logout function
+        function handleLogout() {
+            fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Logged out successfully!');
+                    window.location.href = '/login';
+                } else {
+                    alert('Logout failed: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+                alert('An error occurred. Please try again.');
+            });
+        }
+
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+    </script>
+</head>
+<body>
+    <header class="header">
+        <h1>Donor</h1>
+        <button class="logout" onclick="handleLogout()">Logout</button>
+    </header>
+    <div class="appointment-container">
+        <h1>Book Appointment</h1>
+        <form onsubmit="bookAppointment(event)">
+            <div class="form-group">
+                <label for="appointmentDate">Select Date:</label>
+                <input type="date" id="appointmentDate" required>
+            </div>
+            <div class="form-group">
+                <label for="hospitalId">Select Hospital:</label>
+                <select id="hospitalId" required>
+                    <option value="">-- Select Hospital --</option>
+                    <option value="1">Apollo Hospitals, Jubilee Hills</option>
+                    <option value="2">KIMS Hospital, Secunderabad</option>
+                    <option value="3">Care Hospitals, Banjara Hills</option>
+                    <option value="4">Yashoda Hospitals, Somajiguda</option>
+                    <option value="5">Continental Hospitals, Gachibowli</option>
+                    <option value="6">Star Hospitals, Banjara Hills</option>
+                    <option value="7">Sunshine Hospitals, Secunderabad</option>
+                    <option value="8">Medicover Hospitals, Hitec City</option>
+                    <option value="9">Maxcure Hospitals, Madhapur</option>
+                    <option value="10">NIMS Hospital, Punjagutta</option>
+                </select>
+            </div>
+            <button type="submit" class="book-slot">Book Slot</button>
+        </form>
+    </div>
+</body>
+</html>

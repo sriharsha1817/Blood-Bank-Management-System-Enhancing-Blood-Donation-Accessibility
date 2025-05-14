@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Blood Bank Management System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa, #d32f2f);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: #d32f2f;
+            padding: 15px 0;
+            z-index: 1000;
+            transition: background 0.3s ease;
+            text-align: center;
+            color: white;
+        }
+        .header.scrolled {
+            background: #d32f2f;
+        }
+        .header h1 {
+            margin-bottom: 10px;
+        }
+        .nav {
+            text-align: center;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            margin: 0 5px;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        .nav a:hover {
+            color: #ffcccc;
+        }
+        #particles-js {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .login-container {
+            background: white;
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            animation: fadeIn 1.5s ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            left: -50px;
+            width: 100px;
+            height: 100px;
+            background: rgba(211, 47, 47, 0.1);
+            border-radius: 50%;
+            animation: pulse 4s infinite ease-in-out;
+        }
+        .login-container h2 {
+            color: #d32f2f;
+            font-size: 3em;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: bold;
+            animation: bounceIn 1.2s ease-in;
+        }
+        .form-group {
+            margin: 25px 0;
+            position: relative;
+        }
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 18px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+            background: rgba(255, 255, 255, 1);
+            font-weight: bold;
+        }
+        input:focus {
+            border-color: #d32f2f;
+            box-shadow: 0 0 15px rgba(211, 47, 47, 0.5);
+            transform: scale(1.02);
+            outline: none;
+        }
+        .validation {
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+            transition: opacity 0.3s ease;
+        }
+        .error { color: #ff4444; }
+        .success { color: #00cc00; }
+        .progress-bar {
+            width: 0;
+            height: 5px;
+            background: #d32f2f;
+            border-radius: 5px;
+            margin-top: 5px;
+            transition: width 0.3s ease;
+        }
+        button {
+            background: #d32f2f;
+            color: white;
+            padding: 16px 35px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: bold;
+            transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+            width: 100%;
+            margin-top: 25px;
+        }
+        button:hover {
+            transform: scale(1.05);
+            background: #b71c1c;
+            box-shadow: 0 5px 15px rgba(211, 47, 47, 0.5);
+        }
+        .links {
+            margin-top: 25px;
+        }
+        .links a {
+            color: #d32f2f;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .links a:hover {
+            text-decoration: underline;
+            color: #b71c1c;
+        }
+        .security-indicator {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #666;
+            transition: color 0.3s ease;
+        }
+        .secure { color: #00cc00; animation: blink 1.5s infinite ease-in-out; }
+        .error { color: #ff4444; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.1); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 0.5; }
+        }
+        @keyframes blink {
+            50% { opacity: 0.5; }
+        }
+        @media (max-width: 768px) {
+            .login-container { max-width: 350px; padding: 30px; }
+            .login-container h2 { font-size: 2.2em; }
+            .nav a { padding: 8px 15px; font-size: 14px; }
+            button { font-size: 18px; padding: 14px 30px; }
+            input { font-size: 16px; padding: 12px; }
+        }
+        /* New styling for status messages */
+        .status-message {
+            padding: 10px;
+            margin: 15px 0;
+            border-radius: 8px;
+            display: none;
+        }
+        .status-success {
+            background-color: rgba(0, 200, 0, 0.1);
+            color: #008800;
+            border: 1px solid #00aa00;
+        }
+        .status-error {
+            background-color: rgba(255, 0, 0, 0.1);
+            color: #cc0000;
+            border: 1px solid #ff0000;
+        }
+        .status-warning {
+            background-color: rgba(255, 165, 0, 0.1);
+            color: #cc7000;
+            border: 1px solid #ff9900;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+</head>
+<body>
+    <header class="header">
+        <h1>Blood Bank</h1>
+        <nav class="nav">
+            <a href="/">Home</a>
+            <a href="/donor">Donor Login</a>
+            <a href="/hospital">Hospital Login</a>
+            <a href="/login">Admin Login</a>
+        </nav>
+    </header>
+    <div id="particles-js"></div>
+    <div class="login-container">
+        <h2>Admin Login</h2>
+        <div id="statusMessage" class="status-message"></div>
+        <form id="loginForm">
+            <div class="form-group">
+                <input type="text" id="username" name="username" placeholder="Username" required>
+                <div class="validation"></div>
+                <div class="progress-bar"></div>
+            </div>
+            <div class="form-group">
+                <input type="password" id="password" name="password" placeholder="Password" required>
+                <div class="validation"></div>
+                <div class="progress-bar"></div>
+            </div>
+            <button type="submit" id="loginButton">Login</button>
+        </form>
+        <div class="links"> 
+            <a href="#">Forgot Password?</a>
+        </div>
+        <div class="security-indicator">Secure login system</div>
+    </div>
+
+    <script>
+        // Initialize particle animation
+        document.addEventListener('DOMContentLoaded', function() {
+            particlesJS('particles-js', {
+                particles: {
+                    number: { value: 80, density: { enable: true, value_area: 800 } },
+                    color: { value: '#d32f2f' },
+                    shape: { type: 'circle' },
+                    opacity: { value: 0.5, random: true },
+                    size: { value: 3, random: true },
+                    line_linked: { enable: true, distance: 150, color: '#d32f2f', opacity: 0.4, width: 1 },
+                    move: { enable: true, speed: 2, direction: 'none', random: true, straight: false }
+                },
+                interactivity: {
+                    detect_on: 'canvas',
+                    events: { onhover: { enable: true, mode: 'repulse' }, onclick: { enable: true, mode: 'push' } },
+                    modes: { repulse: { distance: 100, duration: 0.4 } }
+                }
+            });
+
+            // Status message functions
+            function showStatusMessage(message, type) {
+                const statusMessage = document.getElementById('statusMessage');
+                statusMessage.textContent = message;
+                statusMessage.style.display = 'block';
+                
+                // Remove all classes
+                statusMessage.classList.remove('status-success', 'status-error', 'status-warning');
+                
+                // Add the appropriate class
+                if (type === 'success') {
+                    statusMessage.classList.add('status-success');
+                } else if (type === 'error') {
+                    statusMessage.classList.add('status-error');
+                } else if (type === 'warning') {
+                    statusMessage.classList.add('status-warning');
+                }
+            }
+
+            function hideStatusMessage() {
+                const statusMessage = document.getElementById('statusMessage');
+                statusMessage.style.display = 'none';
+            }
+
+            // Real-time validation functions
+            function validateInput(input) {
+                const validation = input.nextElementSibling;
+                const progress = input.parentElement.querySelector('.progress-bar');
+                if (input.value.length < 3) {
+                    validation.textContent = 'Must be at least 3 characters';
+                    validation.className = 'validation error';
+                    validation.style.display = 'block';
+                    progress.style.width = '0%';
+                    return false;
+                } else {
+                    validation.textContent = 'Valid input';
+                    validation.className = 'validation success';
+                    validation.style.display = 'block';
+                    progress.style.width = '100%';
+                    return true;
+                }
+            }
+
+            // Add input validation event listeners
+            document.getElementById('username').addEventListener('input', function() {
+                validateInput(this);
+                hideStatusMessage();
+            });
+            
+            document.getElementById('password').addEventListener('input', function() {
+                validateInput(this);
+                hideStatusMessage();
+            });
+
+            // Form submission handler
+            document.getElementById('loginForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+                
+                const username = document.getElementById('username');
+                const password = document.getElementById('password');
+                const securityIndicator = document.querySelector('.security-indicator');
+                const loginButton = document.getElementById('loginButton');
+                
+                if (!validateInput(username) || !validateInput(password)) {
+                    showStatusMessage('Please correct the input errors.', 'warning');
+                    return;
+                }
+                
+                // Update UI for loading state
+                securityIndicator.textContent = 'Authenticating...';
+                securityIndicator.className = 'security-indicator';
+                loginButton.disabled = true;
+                loginButton.textContent = 'Authenticating...';
+                loginButton.style.opacity = '0.7';
+                
+                // Send login request
+                fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username.value,
+                        password: password.value,
+                        role: 'admin' // Explicitly specify admin role
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            throw new Error('Invalid credentials');
+                        } else {
+                            throw new Error('Server error: ' + response.status);
+                        }
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        securityIndicator.textContent = 'Secure connection established';
+                        securityIndicator.className = 'security-indicator secure';
+                        
+                        // Check if returned role is admin
+                        if (data.role === 'admin') {
+                            // Admin login successful
+                            showStatusMessage('Login successful! Redirecting to dashboard...', 'success');
+                            setTimeout(() => {
+                                window.location.href = '/bloodbank_dashboard';
+                            }, 1000);
+                        } else {
+                            // User authenticated but not as admin
+                            showStatusMessage('Access denied: This is not an admin account.', 'error');
+                            securityIndicator.textContent = 'Access denied: Not an admin account';
+                            securityIndicator.className = 'security-indicator error';
+                        }
+                    } else {
+                        showStatusMessage('Login failed: ' + data.message, 'error');
+                        securityIndicator.textContent = 'Login failed: ' + data.message;
+                        securityIndicator.className = 'security-indicator error';
+                    }
+                })
+                .catch(error => {
+                    console.error('Login error:', error);
+                    showStatusMessage('Authentication error: ' + error.message, 'error');
+                    securityIndicator.textContent = 'Authentication error: ' + error.message;
+                    securityIndicator.className = 'security-indicator error';
+                })
+                .finally(() => {
+                    loginButton.disabled = false;
+                    loginButton.textContent = 'Login';
+                    loginButton.style.opacity = '1';
+                });
+            });
+
+            // Header scroll effect
+            window.addEventListener('scroll', function() {
+                const header = document.querySelector('.header');
+                if (window.scrollY > 50) {
+                    header.classList.add('scrolled');
+                } else {
+                    header.classList.remove('scrolled');
+                }
+            });
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9258997fa9523dfd',t:'MTc0Mjg0NDgwMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

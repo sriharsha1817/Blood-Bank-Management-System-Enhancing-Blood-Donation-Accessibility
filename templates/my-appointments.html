@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Appointments - Blood Bank</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa, #d32f2f);
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: #d32f2f;
+            padding: 15px 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav {
+            text-align: center;
+            flex-grow: 1;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            margin: 0 5px;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        .nav a:hover {
+            color: #ffcccc;
+        }
+        button.logout {
+            background: #d32f2f;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: transform 0.3s ease, background 0.3s ease;
+            margin-right: 20px;
+            width: auto;
+            min-width: 80px;
+        }
+        button.logout:hover {
+            transform: scale(1.05);
+            background: #b71c1c;
+        }
+        .container {
+            max-width: 800px;
+            margin: 90px auto 20px;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #d32f2f;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .error-message {
+            color: #d32f2f;
+            text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .loading {
+            text-align: center;
+            margin: 20px 0;
+            color: #666;
+        }
+    </style>
+    <script>
+        // Load appointments when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAppointments();
+        });
+
+        // Function to load appointments
+        function loadAppointments() {
+            const tableBody = document.querySelector('tbody');
+            tableBody.innerHTML = '<tr><td colspan="4" class="loading">Loading appointments...</td></tr>';
+            
+            fetch('/api/donor/appointments', {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                tableBody.innerHTML = '';
+                
+                if (data.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="4" class="error-message">No appointments found.</td></tr>';
+                    return;
+                }
+                
+                data.forEach(appointment => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${appointment.id}</td>
+                        <td>${appointment.hospital_name}</td>
+                        <td>${appointment.date}</td>
+                        <td>${appointment.status}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading appointments:', error);
+                tableBody.innerHTML = `<tr><td colspan="4" class="error-message">Failed to load appointments. Please try again later.</td></tr>`;
+            });
+        }
+
+        // Logout function
+        function handleLogout() {
+            fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Logged out successfully!');
+                    window.location.href = '/login';
+                } else {
+                    alert('Logout failed: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+                alert('An error occurred. Please try again.');
+            });
+        }
+    </script>
+</head>
+<body>
+    <header class="header">
+        <div class="nav">
+           
+        </div>
+        <button class="logout" onclick="handleLogout()">Logout</button>
+    </header>
+    
+    <div class="container">
+        <h2>My Appointments</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Hospital</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be loaded here -->
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

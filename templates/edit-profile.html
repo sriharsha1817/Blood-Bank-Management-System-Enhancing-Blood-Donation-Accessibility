@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile - Blood Bank Management System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa, #d32f2f);
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: #d32f2f;
+            padding: 15px 0;
+            z-index: 1000;
+            transition: background 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header.scrolled {
+            background: #d32f2f;
+        }
+        .nav {
+            text-align: center;
+            flex-grow: 1;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            margin: 0 5px;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        .nav a:hover {
+            color: #ffcccc;
+        }
+        button.logout {
+            background: #d32f2f;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: transform 0.3s ease, background 0.3s ease;
+            margin-right: 20px;
+            width: auto;
+            min-width: 80px;
+        }
+        button.logout:hover {
+            transform: scale(1.05);
+            background: #b71c1c;
+        }
+        .profile-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 500px;
+            margin-top: 80px; /* Space for fixed header */
+            margin-bottom: 20px;
+            animation: slideIn 1.5s ease-in-out;
+        }
+        .profile-container h1 {
+            color: #d32f2f;
+            font-size: 2em;
+            margin-bottom: 30px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        input:focus {
+            border-color: #d32f2f;
+            box-shadow: 0 0 5px rgba(211, 47, 47, 0.3);
+            outline: none;
+        }
+        button.save-changes {
+            background: #d32f2f;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.3s ease, background 0.3s ease;
+            width: 100%;
+            max-width: 200px;
+            margin: 0 auto;
+            display: block;
+        }
+        button.save-changes:hover {
+            transform: scale(1.05);
+            background: #b71c1c;
+        }
+        .alert {
+            padding: 10px;
+            background-color: #f8d7da;
+            color: #721c24;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .alert.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @media (max-width: 768px) {
+            .profile-container { max-width: 350px; padding: 20px; margin: 80px 10px 20px; }
+            .profile-container h1 { font-size: 1.8em; }
+            .nav a { padding: 8px 15px; font-size: 14px; }
+            button.logout { font-size: 12px; padding: 6px 12px; margin-right: 10px; min-width: 70px; }
+            button.save-changes { font-size: 14px; padding: 10px 20px; max-width: 180px; }
+        }
+    </style>
+    <script>
+        // Function to fetch hospital profile data from the server
+        function loadProfile() {
+            fetch('/api/hospital-profile', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('hospitalName').value = data.hospitalName || '';
+                    document.getElementById('email').value = data.email || '';
+                    document.getElementById('address').value = data.address || '';
+                } else {
+                    showAlert(data.message || 'Failed to load profile', false);
+                }
+            })
+            .catch(error => {
+                console.error('Profile loading error:', error);
+                showAlert('An error occurred while loading profile data.', false);
+            });
+        }
+
+        // Function to save changes to the server
+        function saveChanges(event) {
+            event.preventDefault();
+            
+            const hospitalProfile = {
+                hospitalName: document.getElementById('hospitalName').value,
+                email: document.getElementById('email').value,
+                address: document.getElementById('address').value
+            };
+
+            fetch('/api/hospital-profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify(hospitalProfile)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Profile updated successfully!', true);
+                } else {
+                    showAlert(data.message || 'Failed to update profile', false);
+                }
+            })
+            .catch(error => {
+                console.error('Profile update error:', error);
+                showAlert('An error occurred. Please try again.', false);
+            });
+        }
+
+        // Function to display alert messages
+        function showAlert(message, isSuccess) {
+            const alertDiv = document.getElementById('alert');
+            alertDiv.textContent = message;
+            alertDiv.style.display = 'block';
+            
+            if (isSuccess) {
+                alertDiv.classList.add('success');
+            } else {
+                alertDiv.classList.remove('success');
+            }
+            
+            // Hide alert after 3 seconds
+            setTimeout(() => {
+                alertDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // Logout function
+        function handleLogout() {
+            fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/login';
+                } else {
+                    showAlert('Logout failed: ' + data.message, false);
+                }
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+                showAlert('An error occurred during logout. Please try again.', false);
+            });
+        }
+
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
+        // Load profile on page load
+        window.onload = loadProfile;
+    </script>
+</head>
+<body>
+    <header class="header">
+        <div class="nav">
+           
+        </div>
+        <button class="logout" onclick="handleLogout()">Logout</button>
+    </header>
+    <div class="profile-container">
+        <h1>Edit Profile</h1>
+        <div id="alert" class="alert"></div>
+        <form onsubmit="saveChanges(event)">
+            <div class="form-group">
+                <label for="hospitalName">Hospital Name:</label>
+                <input type="text" id="hospitalName" placeholder="Hospital Name" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" placeholder="Email" required>
+            </div>
+            <div class="form-group">
+                <label for="address">Address:</label>
+                <input type="text" id="address" placeholder="Address" required>
+            </div>
+            <button type="submit" class="save-changes">Save Changes</button>
+        </form>
+    </div>
+</body>
+</html>

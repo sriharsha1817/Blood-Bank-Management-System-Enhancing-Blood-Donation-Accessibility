@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Blood - Blood Bank Management System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa, #d32f2f);
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: #d32f2f;
+            padding: 15px 0;
+            z-index: 1000;
+            transition: background 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header.scrolled {
+            background: #d32f2f;
+        }
+        .nav {
+            text-align: center;
+            flex-grow: 1;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            margin: 0 5px;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        .nav a:hover {
+            color: #ffcccc;
+        }
+        button.logout {
+            background: #d32f2f;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: transform 0.3s ease, background 0.3s ease;
+            margin-right: 20px;
+            width: auto;
+            min-width: 80px;
+        }
+        button.logout:hover {
+            transform: scale(1.05);
+            background: #b71c1c;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            width: 100%;
+            margin-top: 80px; /* Space for fixed header */
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+        .request-form {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: slideIn 1.5s ease-in-out;
+        }
+        .request-form h2 {
+            color: #d32f2f;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #d32f2f;
+            box-shadow: 0 0 5px rgba(211, 47, 47, 0.3);
+            outline: none;
+        }
+        button.submit-request {
+            background: #d32f2f;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.3s ease, background 0.3s ease;
+            width: 100%;
+            max-width: 200px;
+            margin: 0 auto;
+            display: block;
+        }
+        button.submit-request:hover {
+            transform: scale(1.05);
+            background: #b71c1c;
+        }
+        .view-requests-btn {
+            background: #d32f2f;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.3s ease, background 0.3s ease;
+            width: 100%;
+            max-width: 250px;
+            margin: 20px auto 0;
+            display: block;
+            text-align: center;
+            text-decoration: none;
+        }
+        .view-requests-btn:hover {
+            transform: scale(1.05);
+            background: #b71c1c;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            .request-form { max-width: 350px; padding: 20px; margin: 0 auto; }
+            .request-form h2 { font-size: 1.3em; }
+            .nav a { padding: 8px 15px; font-size: 14px; }
+            button.logout { font-size: 12px; padding: 6px 12px; margin-right: 10px; min-width: 70px; }
+            button.submit-request, .view-requests-btn { font-size: 14px; padding: 10px 20px; max-width: 180px; }
+        }
+    </style>
+    <script>
+        function submitRequest(event) {
+            // Prevent form from submitting normally
+            event.preventDefault();
+            
+            // Get hospital name from session or profile
+            let hospitalName = "";
+            
+            // Get hospital name by making an API call
+            fetch('/api/users/profile', {
+                method: 'GET',
+                credentials: 'same-origin',
+            })
+            .then(response => response.json())
+            .then(profileData => {
+                hospitalName = profileData.username;
+                
+                // Now send the blood request with the hospital name
+                const bloodType = document.getElementById('bloodGroup').value;
+                const quantity = document.getElementById('quantity').value;
+                const purpose = document.getElementById('purpose').value;
+                
+                // Create request data in the format expected by the backend
+                const requestData = {
+                    hospital_name: hospitalName,
+                    blood_type: bloodType,
+                    quantity: quantity + " units",
+                    purpose: purpose
+                };
+                
+                // Send the request to the server
+                fetch('/api/blood-requests', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Blood request submitted successfully!');
+                        // Reset form fields
+                        document.getElementById('bloodGroup').value = 'A+';
+                        document.getElementById('quantity').value = '';
+                        document.getElementById('purpose').value = '';
+                    } else {
+                        alert('Failed to submit request: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Request submission error:', error);
+                    alert('An error occurred. Please try again.');
+                });
+            })
+            .catch(error => {
+                console.error('Error getting profile:', error);
+                alert('Could not retrieve hospital information. Please try again.');
+            });
+        }
+
+        // Logout function
+        function handleLogout() {
+            fetch('/api/auth/logout', {
+                method: 'POST',
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/login';
+                } else {
+                    alert('Logout failed: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+                alert('An error occurred during logout. Please try again.');
+            });
+        }
+
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+    </script>
+</head>
+<body>
+    <header class="header">
+        <div class="nav">
+            
+        </div>
+        <button class="logout" onclick="handleLogout()">Logout</button>
+    </header>
+    
+    <div class="container">
+        <div class="request-form">
+            <h2>Request Blood</h2>
+            <form id="requestForm" onsubmit="submitRequest(event)">
+                <div class="form-group">
+                    <label for="bloodGroup">Blood Group:</label>
+                    <select id="bloodGroup" required>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="quantity">Quantity (Units):</label>
+                    <input type="number" id="quantity" placeholder="Enter quantity" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="purpose">Purpose:</label>
+                    <textarea id="purpose" placeholder="Enter purpose of request" rows="4" required></textarea>
+                </div>
+                <button type="submit" class="submit-request">Submit Request</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

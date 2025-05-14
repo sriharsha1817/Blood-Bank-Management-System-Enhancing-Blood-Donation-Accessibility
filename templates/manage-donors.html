@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Donors - Blood Bank Management System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa, #d32f2f);
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: #d32f2f;
+            padding: 15px 0;
+            z-index: 1000;
+            transition: background 0.3s ease;
+        }
+        .header.scrolled {
+            background: #d32f2f;
+        }
+        .nav {
+            text-align: center;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            margin: 0 5px;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        .nav a:hover {
+            color: #ffcccc;
+        }
+        .donors-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 800px;
+            margin-top: 80px; /* Space for fixed header */
+            margin-bottom: 20px;
+            animation: slideIn 1.5s ease-in-out;
+        }
+        .donors-container h1 {
+            color: #d32f2f;
+            font-size: 2em;
+            margin-bottom: 20px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #f5f5f5;
+            font-weight: bold;
+            color: #333;
+        }
+        td {
+            color: #666;
+        }
+        tr:hover {
+            background: #f9f9f9;
+        }
+        .actions button {
+            background: #d32f2f;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            margin-right: 10px;
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+        .actions button:hover {
+            transform: scale(1.05);
+            background: #b71c1c;
+        }
+        button.add-donor {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.3s ease, background 0.3s ease;
+            margin-top: 20px;
+            display: block;
+            width: 100%;
+            max-width: 200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        button.add-donor:hover {
+            transform: scale(1.05);
+            background: #45a049;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 10px;
+        }
+        .modal-content h2 {
+            color: #d32f2f;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .form-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .form-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-save {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-cancel {
+            background: #f44336;
+            color: white;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: #666;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @media (max-width: 768px) {
+            .donors-container { max-width: 350px; padding: 20px; margin: 80px 10px 20px; }
+            .donors-container h1 { font-size: 1.8em; }
+            .nav a { padding: 8px 15px; font-size: 14px; }
+            th, td { padding: 10px; font-size: 14px; }
+            .actions button { padding: 6px 12px; font-size: 12px; }
+            button.add-donor { font-size: 14px; padding: 8px 15px; max-width: 180px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Blood Bank</h1>
+        <nav class="nav">
+           
+        </nav>
+    </header>
+    
+    <div class="donors-container">
+        <h1>Manage Donors</h1>
+        <div id="loading" class="loading">Loading donors...</div>
+        <table id="donors-table" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Blood Type</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="donors-list"></tbody>
+        </table>
+        <button class="add-donor" id="add-donor-btn">Add New Donor</button>
+    </div>
+    
+    <!-- Add/Edit Donor Modal -->
+    <div id="donor-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="modal-title">Add New Donor</h2>
+            <form id="donor-form">
+                <input type="hidden" id="donor-id">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="blood-type">Blood Type:</label>
+                    <select id="blood-type" required>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                    </select>
+                </div>
+                <div class="form-buttons">
+                    <button type="button" class="btn-cancel" id="cancel-btn">Cancel</button>
+                    <button type="submit" class="btn-save">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const donorsTable = document.getElementById('donors-table');
+        const donorsList = document.getElementById('donors-list');
+        const loadingIndicator = document.getElementById('loading');
+        const addDonorBtn = document.getElementById('add-donor-btn');
+        const donorModal = document.getElementById('donor-modal');
+        const donorForm = document.getElementById('donor-form');
+        const modalTitle = document.getElementById('modal-title');
+        const donorIdInput = document.getElementById('donor-id');
+        const usernameInput = document.getElementById('username');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const bloodTypeInput = document.getElementById('blood-type');
+        const cancelBtn = document.getElementById('cancel-btn');
+
+        // API functions
+        async function fetchDonors() {
+            try {
+                const response = await fetch('/api/donors');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch donors');
+                }
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching donors:', error);
+                return [];
+            }
+        }
+
+        async function addDonor(donorData) {
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: donorData.username,
+                        email: donorData.email,
+                        password: donorData.password,
+                        role: 'donor',
+                        blood_type: donorData.bloodType
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to add donor');
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('Error adding donor:', error);
+                throw error;
+            }
+        }
+
+        async function deleteDonor(donorId) {
+            try {
+                const response = await fetch(`/api/donors/${donorId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.message || 'Failed to delete donor');
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Error deleting donor:', error);
+                throw error;
+            }
+        }
+
+        // UI functions
+        function displayDonors(donors) {
+            donorsList.innerHTML = '';
+            
+            if (donors.length === 0) {
+                donorsList.innerHTML = '<tr><td colspan="4" style="text-align: center;">No donors found</td></tr>';
+                return;
+            }
+            
+            donors.forEach(donor => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${donor.username}</td>
+                    <td>${donor.email}</td>
+                    <td>${donor.blood_type || 'Not specified'}</td>
+                    <td class="actions">
+                        <button onclick="handleDeleteDonor('${donor.id}', '${donor.username}')">Delete</button>
+                    </td>
+                `;
+                donorsList.appendChild(row);
+            });
+        }
+
+        function showModal(title = 'Add New Donor', donor = null) {
+            modalTitle.textContent = title;
+            
+            // Reset form
+            donorForm.reset();
+            
+            // Set values if editing
+            if (donor) {
+                donorIdInput.value = donor.id;
+                usernameInput.value = donor.username;
+                emailInput.value = donor.email;
+                
+                // Password field is empty for editing
+                passwordInput.value = '';
+                
+                if (donor.blood_type) {
+                    bloodTypeInput.value = donor.blood_type;
+                }
+            } else {
+                donorIdInput.value = '';
+            }
+            
+            // Show modal
+            donorModal.style.display = 'block';
+        }
+
+        function hideModal() {
+            donorModal.style.display = 'none';
+        }
+
+        // Event handlers
+        async function loadDonors() {
+            loadingIndicator.style.display = 'block';
+            donorsTable.style.display = 'none';
+            
+            try {
+                const donors = await fetchDonors();
+                displayDonors(donors);
+                
+                loadingIndicator.style.display = 'none';
+                donorsTable.style.display = 'table';
+            } catch (error) {
+                loadingIndicator.textContent = 'Error loading donors: ' + error.message;
+            }
+        }
+
+        async function handleSubmit(event) {
+            event.preventDefault();
+            
+            const donorData = {
+                username: usernameInput.value,
+                email: emailInput.value,
+                password: passwordInput.value,
+                bloodType: bloodTypeInput.value
+            };
+            
+            try {
+                const isEditing = donorIdInput.value !== '';
+                
+                if (isEditing) {
+                    // Implement update functionality if needed
+                    alert('Updating donors is not implemented in this version');
+                } else {
+                    await addDonor(donorData);
+                    alert('Donor added successfully!');
+                }
+                
+                hideModal();
+                loadDonors();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Global functions for event handlers
+        window.handleDeleteDonor = async function(donorId, donorName) {
+            if (confirm(`Are you sure you want to delete ${donorName}?`)) {
+                try {
+                    await deleteDonor(donorId);
+                    alert(`${donorName} has been deleted.`);
+                    loadDonors();
+                } catch (error) {
+                    alert('Error: ' + error.message);
+                }
+            }
+        };
+
+        // Event listeners
+        donorForm.addEventListener('submit', handleSubmit);
+        addDonorBtn.addEventListener('click', () => showModal());
+        cancelBtn.addEventListener('click', hideModal);
+
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (event) => {
+            if (event.target === donorModal) {
+                hideModal();
+            }
+        });
+
+        // Load donors on page load
+        window.onload = loadDonors;
+    </script>
+</body>
+</html>

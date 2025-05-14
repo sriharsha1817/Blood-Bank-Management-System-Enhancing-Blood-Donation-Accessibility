@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donor Notifications</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        body {
+            background: linear-gradient(to right, #ffafbd, #ffc3a0);
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 600px;
+            text-align: center;
+        }
+        h2 {
+            color: #ff6f61;
+            margin-bottom: 20px;
+        }
+        .notification {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .notification.show {
+            opacity: 1;
+        }
+        .timestamp {
+            font-size: 0.8em;
+            color: #666;
+        }
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Recent Updates</h2>
+        <div id="notifications"></div>
+        <a href="{{ url_for('donor_dashboard') }}">← Back to Dashboard</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is logged in and has donor role
+            fetch('/api/users/profile')
+                .then(response => {
+                    if (!response.ok) {
+                        window.location.href = '/login';
+                        throw new Error('You must be logged in');
+                    }
+                    return response.json();
+                })
+                .then(user => {
+                    console.log("User profile:", user);  // Debug logging
+                    if (user.role !== 'donor') {
+                        window.location.href = '/';
+                        throw new Error('Unauthorized access');
+                    }
+                })
+                .catch(error => console.error('Error checking user profile:', error));
+
+            const notificationsDiv = document.getElementById("notifications");
+
+            // Fetch existing notifications on page load
+            fetch('/api/notifications')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch notifications');
+                    }
+                    return response.json();
+                })
+                .then(notifications => {
+                    console.log("Existing notifications:", notifications);
+                    if (notifications.length === 0) {
+                        notificationsDiv.innerHTML = "<p>No notifications available.</p>";
+                    } else {
+                        notifications.forEach(data => {
+                            const newNotification = document.createElement("div");
+                            newNotification.className = "notification show";
+                            newNotification.innerHTML = `
+                                <strong>${data.message}</strong>
+                                <span class="timestamp">${data.date}</span>
+                            `;
+                            notificationsDiv.prepend(newNotification);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching notifications:', error);
+                    notificationsDiv.innerHTML = "<p>Error loading notifications.</p>";
+                });
+
+            // Function to connect to the stream for real-time updates
+            function connectToStream() {
+                console.log("Connecting to /stream...");
+                const eventSource = new EventSource("/stream");
+
+                eventSource.onmessage = function(event) {
+                    console.log("Received notification:", event.data);
+                    const data = JSON.parse(event.data);
+                    const newNotification = document.createElement("div");
+                    newNotification.className = "notification show";
+                    newNotification.innerHTML = `
+                        <strong>${data.message}</strong>
+                        <span class="timestamp">${data.timestamp}</span>
+                    `;
+                    notificationsDiv.prepend(newNotification);
+
+                    // Remove "No notifications" message if it exists
+                    const noNotificationsMessage = notificationsDiv.querySelector("p");
+                    if (noNotificationsMessage) {
+                        noNotificationsMessage.remove();
+                    }
+                };
+
+                eventSource.onerror = function() {
+                    console.error("Error with EventSource, reconnecting in 5 seconds...");
+                    eventSource.close();
+                    setTimeout(connectToStream, 5000); // Reconnect after 5 seconds
+                };
+            }
+
+            // Initial connection
+            connectToStream();
+        });
+    </script>
+</body>
+</html>

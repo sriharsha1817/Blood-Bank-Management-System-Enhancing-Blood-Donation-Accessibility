@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Notifications</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #ffafbd, #ffc3a0);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 800px;
+        }
+        h2 {
+            color: #ff6f61;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        li:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Notifications</h2>
+        <ul id="notificationList"></ul>
+    </div>
+
+    <script>
+        // Fetch existing notifications on page load
+        fetch('/api/notifications')
+            .then(response => response.json())
+            .then(notifications => {
+                const notificationList = document.getElementById('notificationList');
+                if (notifications.length === 0) {
+                    notificationList.innerHTML = '<li>No notifications found.</li>';
+                    return;
+                }
+                notifications.forEach(notification => {
+                    const li = document.createElement('li');
+                    li.textContent = `${notification.message} - ${notification.date}`;
+                    notificationList.appendChild(li);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching notifications:', error);
+                document.getElementById('notificationList').innerHTML = '<li>Error loading notifications.</li>';
+            });
+
+        // Listen for real-time notifications via SSE
+        const eventSource = new EventSource('/stream');
+        eventSource.onmessage = function(event) {
+            const notification = JSON.parse(event.data);
+            console.log('New notification:', notification);
+            const notificationList = document.getElementById('notificationList');
+            const li = document.createElement('li');
+            li.textContent = `${notification.message} - ${notification.timestamp}`;
+            notificationList.prepend(li);
+        };
+    </script>
+</body>
+</html>

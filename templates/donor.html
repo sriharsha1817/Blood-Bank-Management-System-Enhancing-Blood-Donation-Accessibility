@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donor Login - Blood Bank Management System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa, #d32f2f);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(211, 47, 47, 0.9);
+            padding: 15px 0;
+            z-index: 1000;
+            transition: background 0.3s ease;
+        }
+        .header.scrolled {
+            background: #d32f2f;
+        }
+        .nav {
+            text-align: center;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            margin: 0 5px;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        .nav a:hover {
+            color: #ffcccc;
+        }
+        .login-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            animation: slideIn 1s ease-in;
+        }
+        .login-container h2 {
+            color: #d32f2f;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        input:focus {
+            border-color: #d32f2f;
+            outline: none;
+        }
+        button {
+            background: #d32f2f;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: transform 0.3s ease, background 0.3s ease;
+            width: 100%;
+        }
+        button:hover {
+            transform: scale(1.05);
+            background: #b71c1c;
+        }
+        .links {
+            margin-top: 15px;
+        }
+        .links a {
+            color: #d32f2f;
+            text-decoration: none;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+        .error-message {
+            color: #d32f2f;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @media (max-width: 768px) {
+            .login-container { max-width: 300px; padding: 20px; }
+            .nav a { padding: 8px 15px; font-size: 14px; }
+            button { font-size: 16px; padding: 10px 20px; }
+        }
+    </style>
+    <script>
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+    </script>
+</head>
+<body>
+    <header class="header">
+        <h1>Blood Bank</h1>
+        <nav class="nav">
+            <a href="{{url_for('index')}}">Home</a>
+            <a href="{{url_for('donor_login')}}">Donor Login</a>
+            <a href="{{url_for('hospital_login')}}">Hospital Login</a>
+            <a href="{{url_for('bloodbank_login')}}">Admin Login</a>
+        </nav>
+    </header>
+    <div class="login-container">
+        <h2>Donor Login</h2>
+        {% if error %}
+        <div class="error-message">{{ error }}</div>
+        {% endif %}
+        <form action="{{ url_for('donor_login') }}" method="POST">
+            <div class="form-group">
+                <input type="text" id="username" name="username" placeholder="Username" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="password" name="password" placeholder="Password" required>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+        <div class="links">
+            <a href="{{url_for('donor_register')}}">Register as Donor</a> | 
+            <a href="#">Forgot Password?</a>
+        </div>
+    </div>
+</body>
+</html>

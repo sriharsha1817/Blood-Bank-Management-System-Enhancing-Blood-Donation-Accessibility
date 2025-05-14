@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donor Registration - Blood Bank Management System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa, #d32f2f);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: #d32f2f;
+            padding: 15px 0;
+            z-index: 1000;
+            transition: background 0.3s ease;
+            text-align: center;
+            color: white;
+        }
+        .header.scrolled {
+            background: #d32f2f;
+        }
+        .nav {
+            text-align: center;
+            margin-top: 10px;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            margin: 0 5px;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        .nav a:hover {
+            color: #ffcccc;
+        }
+        .register-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            animation: slideIn 1.2s ease-in-out;
+            margin-top: 70px;
+        }
+        .register-container h2 {
+            color: #d32f2f;
+            font-size: 2em;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+        }
+        .form-group {
+            margin: 20px 0;
+            position: relative;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+            text-align: left;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+        input:focus, select:focus {
+            border-color: #d32f2f;
+            box-shadow: 0 0 10px rgba(211, 47, 47, 0.3);
+            outline: none;
+        }
+        .validation {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            display: none;
+            text-align: left;
+        }
+        .error { color: #ff4444; }
+        .success { color: #00cc00; }
+        .progress-bar {
+            width: 0;
+            height: 5px;
+            background: #d32f2f;
+            border-radius: 5px;
+            margin-top: 5px;
+            transition: width 0.3s ease;
+        }
+        button {
+            background: #d32f2f;
+            color: white;
+            padding: 14px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: transform 0.3s ease, background 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+        button:hover {
+            transform: scale(1.05);
+            background: #b71c1c;
+        }
+        .links {
+            margin-top: 15px;
+        }
+        .links a {
+            color: #d32f2f;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+        .security-indicator {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+        .secure { color: #00cc00; }
+        .error-message {
+            color: #ff4444;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @media (max-width: 768px) {
+            .register-container { max-width: 350px; padding: 30px; }
+            .register-container h2 { font-size: 1.8em; }
+            .nav a { padding: 8px 15px; font-size: 14px; }
+            button { font-size: 16px; padding: 12px 25px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Blood Bank</h1>
+        <nav class="nav">
+            <a href="/">Home</a>
+            <a href="{{ url_for('donor_login') }}">Donor Login</a>
+            <a href="{{ url_for('hospital_login') }}">Hospital Login</a>
+            <a href="/login">Admin Login</a>
+        </nav>
+    </header>
+    <div class="register-container">
+        <h2>Donor Registration</h2>
+        {% if error %}
+        <div id="error-message" class="error-message">{{ error }}</div>
+        {% else %}
+        <div id="error-message" class="error-message" style="display: none;"></div>
+        {% endif %}
+        <form id="registrationForm" method="POST" action="{{ url_for('donor_register') }}">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" placeholder="Username" required>
+                <div class="validation"></div>
+                <div class="progress-bar"></div>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" placeholder="Email" required>
+                <div class="validation"></div>
+                <div class="progress-bar"></div>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" placeholder="Password" required>
+                <div class="validation"></div>
+                <div class="progress-bar"></div>
+            </div>
+            <div class="form-group">
+                <label for="bloodType">Blood Type:</label>
+                <select id="bloodType" name="bloodType" required>
+                    <option value="">Select Blood Type</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                </select>
+                <div class="validation"></div>
+                <div class="progress-bar"></div>
+            </div>
+            <button type="submit">Register</button>
+        </form>
+        <div class="links">
+            <a href="{{ url_for('donor_login') }}">Already have an account? Login here</a>
+        </div>
+        <div class="security-indicator">Secure registration system</div>
+    </div>
+
+    <script>
+        // Validate input fields
+        function validateInput(input) {
+            const validation = input.nextElementSibling;
+            const progress = input.parentElement.querySelector('.progress-bar');
+            
+            // Special case for blood type
+            if (input.id === 'bloodType') {
+                if (input.value === "") {
+                    validation.textContent = 'Please select a blood type';
+                    validation.className = 'validation error';
+                    validation.style.display = 'block';
+                    progress.style.width = '0%';
+                    return false;
+                } else {
+                    validation.textContent = 'Valid selection';
+                    validation.className = 'validation success';
+                    validation.style.display = 'block';
+                    progress.style.width = '100%';
+                    return true;
+                }
+            } else if (input.id === 'email') {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(input.value)) {
+                    validation.textContent = 'Please enter a valid email address';
+                    validation.className = 'validation error';
+                    validation.style.display = 'block';
+                    progress.style.width = '0%';
+                    return false;
+                }
+            } else if (input.id === 'password') {
+                if (input.value.length < 6) {
+                    validation.textContent = 'Password must be at least 6 characters';
+                    validation.className = 'validation error';
+                    validation.style.display = 'block';
+                    progress.style.width = '30%';
+                    return false;
+                }
+            } else if (input.value.length < 3) {
+                validation.textContent = 'Must be at least 3 characters';
+                validation.className = 'validation error';
+                validation.style.display = 'block';
+                progress.style.width = '0%';
+                return false;
+            }
+            
+            // If we got here, the input is valid
+            validation.textContent = 'Valid input';
+            validation.className = 'validation success';
+            validation.style.display = 'block';
+            progress.style.width = '100%';
+            return true;
+        }
+        
+        // Handle form submission
+        document.getElementById('registrationForm').addEventListener('submit', function(event) {
+            const username = document.getElementById('username');
+            const password = document.getElementById('password');
+            const email = document.getElementById('email');
+            const bloodType = document.getElementById('bloodType');
+            const errorMessage = document.getElementById('error-message');
+            
+            // Validate all fields
+            const isUsernameValid = validateInput(username);
+            const isPasswordValid = validateInput(password);
+            const isEmailValid = validateInput(email);
+            const isBloodTypeValid = validateInput(bloodType);
+            
+            if (!isUsernameValid || !isPasswordValid || !isEmailValid || !isBloodTypeValid) {
+                event.preventDefault(); // Prevent form submission
+                errorMessage.textContent = 'Please correct the input errors.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+        });
+        
+        // Add input validation on all form fields
+        document.getElementById('username').addEventListener('input', function() {
+            validateInput(this);
+        });
+        
+        document.getElementById('password').addEventListener('input', function() {
+            validateInput(this);
+        });
+        
+        document.getElementById('email').addEventListener('input', function() {
+            validateInput(this);
+        });
+        
+        document.getElementById('bloodType').addEventListener('change', function() {
+            validateInput(this);
+        });
+        
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+    </script>
+</body>
+</html>
